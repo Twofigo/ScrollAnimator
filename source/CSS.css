@@ -1,0 +1,15 @@
+body{
+	padding:0pt;
+	margin:0pt;
+
+}
+#block{
+	height:4000pt;
+}
+#box{
+	background-color:red;
+	display:block;
+	position:fixed;
+	width:100pt;
+	height:100pt;
+}
