@@ -1,9 +1,17 @@
 function setup(){
     var animator = scrollAnimator.newAnimator(document.getElementById("box"));
-    var pLeft = animator.addAnimation("left");
+    var pLeft = animator.addAnimation("left", "distance");
+    pLeft.addKeyframe(0,0);
     pLeft.addKeyframe(100,300);
     pLeft.addKeyframe(400,1500);
     pLeft.addKeyframe(10,6000);
+    var bgColor = animator.addAnimation("backgroundColor", "color");
+    bgColor.addKeyframe({r:0,g:0,b:255},0);
+    bgColor.addKeyframe({r:0,g:255,b:255},100);
+    bgColor.addKeyframe({r:255,g:0,b:0},3000);
+    bgColor.addKeyframe({r:128,g:50,b:200},4000);
+    
+    var pLeft = animator.addAnimation("left", "distance");
     
     scrollAnimator.init();
 }
@@ -15,6 +23,10 @@ var scrollAnimator = (function(){
     var syntaxFunctions = {};
     syntaxFunctions.distance = function(dom, attribute, value){
         dom.style[attribute]= value+"px";
+    }
+    syntaxFunctions.color = function(dom, attribute, value){
+        if(!value.a)value.a=1;
+        dom.style[attribute]= "rgba("+value.r+","+value.g+","+value.b+","+value.a+")";
     }
     
     var transissions = {};
@@ -53,8 +65,8 @@ var scrollAnimator = (function(){
        }
        return t;
     }
-    Animator.prototype.addAnimation = function(attribute, syntaxMode=false){     
-        var animation = new Animation(attribute, syntaxMode);
+    Animator.prototype.addAnimation = function(attribute, syntax){     
+        var animation = new Animation(attribute, syntax);
         this.animations.push(animation);
         return animation;
     }
@@ -64,14 +76,10 @@ var scrollAnimator = (function(){
         }
     }
     
-    var Animation = function(attribute, syntaxMode=false){
+    var Animation = function(attribute, syntax){
         this.attribute = attribute;
         this.keyframes = [];
-        
-        if (syntaxMode.typeof)this.syntaxFunction;
-        
-        
-        this.addKeyframe(0,0);
+        this.syntax = syntax;
         
         
         this._keyframe;
@@ -108,11 +116,13 @@ var scrollAnimator = (function(){
             if  (next_keyframe){
                 this._timeDiff = next_keyframe.timeStamp - last_keyframe.timeStamp;
                 
-                this._valueDiff = false;
-                for(key in this._keyframe.value){
-                     this._valueDiff[key] = next_keyframe.value[key] - last_keyframe.value[key];
+                if (!isFinite(this._keyframe.value)){
+                    this._valueDiff = {};
+                    for(key in this._keyframe.value){
+                        this._valueDiff[key] = next_keyframe.value[key] - last_keyframe.value[key];
+                    }
                 }
-                if (!this._valueDiff){
+                else{
                      this._valueDiff = next_keyframe.value - last_keyframe.value;
                 }
             }
@@ -127,11 +137,14 @@ var scrollAnimator = (function(){
         if (this._valueDiff){
             var factor = this._keyframe.transission((timeStamp-this._keyframe.timeStamp)/this._timeDiff);
             
-            for(key in this._keyframe.value){
-                 v[key] = this._valueDiff[key]*factor;
-                 v[key] += this._keyframe.value[key];
+            if (!isFinite(this._keyframe.value)){
+                v = {};
+                for(key in this._keyframe.value){
+                    v[key] = this._valueDiff[key]*factor;
+                    v[key] += this._keyframe.value[key];
+                }
             }
-            if (!v){
+            else{
                  v = this._valueDiff*factor;
                  v += this._keyframe.value;
             }
@@ -140,7 +153,7 @@ var scrollAnimator = (function(){
             v = this._keyframe.value;
         }    
         
-        syntaxFunctions.distance(dom, this.attribute, v);
+        syntaxFunctions[this.syntax](dom, this.attribute, v);
     }
     
     var Keyframe = function(value, timeStamp, transission = transissions.linear){
