@@ -12,4 +12,16 @@ body{
 	position:fixed;
 	width:100pt;
 	height:100pt;
+	z-index:100;
+}
+.textbox{
+	width:400pt;
+	height:80pt;
+	display:block;
+	position:relative;
+	background-color:blue;
+	margin:10pt;
+}
+.textbox h1{
+	margin:0pt;
 }
