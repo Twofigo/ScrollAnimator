@@ -21,12 +21,24 @@ var scrollAnimator = (function(){
     var animators = [];
     
     var syntaxFunctions = {};
-    syntaxFunctions.distance = function(dom, attribute, value){
-        dom.style[attribute]= value+"px";
+    syntaxFunctions.distance = function(value, dom, attribute, unit = "px"){
+        dom.style[attribute]= value+unit;
     }
-    syntaxFunctions.color = function(dom, attribute, value){
+    syntaxFunctions.color = function(value, dom, attribute, unit){
         if(!value.a)value.a=1;
         dom.style[attribute]= "rgba("+value.r+","+value.g+","+value.b+","+value.a+")";
+    }
+    syntaxFunctions.Offset_vertical = function(value, dom, attribute, unit){
+        syntaxFunctions.distance(dom, attribute+"Top", value);
+        syntaxFunctions.distance(dom, attribute+"Bottom", -value);
+    }
+    syntaxFunctions.Offset_horizontal = function(value, dom, attribute, unit){
+        syntaxFunctions.distance(dom, attribute+"Left", value);
+        syntaxFunctions.distance(dom, attribute+"Right", -value);
+    }
+    syntaxFunctions.Offset_pair = function(value, dom, attribute, unit){
+        syntaxFunctions.margin_offset_horizontal(value.x, dom, attribute, unit);
+        syntaxFunctions.margin_offset_vertical(value.y, dom, attribute, unit);
     }
     
     var transissions = {};
@@ -65,8 +77,8 @@ var scrollAnimator = (function(){
        }
        return t;
     }
-    Animator.prototype.addAnimation = function(attribute, syntax){     
-        var animation = new Animation(attribute, syntax);
+    Animator.prototype.addAnimation = function(attribute, syntax, unit){     
+        var animation = new Animation(attribute, syntax, unit);
         this.animations.push(animation);
         return animation;
     }
@@ -76,11 +88,11 @@ var scrollAnimator = (function(){
         }
     }
     
-    var Animation = function(attribute, syntax){
+    var Animation = function(attribute, syntax, unit){
         this.attribute = attribute;
         this.keyframes = [];
         this.syntax = syntax;
-        
+        this.unit = unit;
         
         this._keyframe;
         this._valueDiff;
@@ -94,7 +106,7 @@ var scrollAnimator = (function(){
        }
        return t;
     }
-    Animation.prototype.addKeyframe = function(value, timeStamp, transission = transissions.linear){
+    Animation.prototype.addKeyframe = function(value, timeStamp, transission = "linear"){
         var keyframe = new Keyframe(value, timeStamp, transission)
         this.keyframes.push(keyframe);
         this.keyframes.sort(function(a,b){return a.timeStamp - b.timeStamp});
@@ -153,13 +165,13 @@ var scrollAnimator = (function(){
             v = this._keyframe.value;
         }    
         
-        syntaxFunctions[this.syntax](dom, this.attribute, v);
+        syntaxFunctions[this.syntax](v, dom, this.attribute, this.unit);
     }
     
-    var Keyframe = function(value, timeStamp, transission = transissions.linear){
+    var Keyframe = function(value, timeStamp, transission = "linear"){
         this.value = value;
         this.timeStamp = timeStamp;
-        this.transission = transission;
+        this.transission = transissions[transission];
     }
     Keyframe.prototype.clone = function(){
        var t = new Keyframe(value, timeStamp, this.transissionFunc);
