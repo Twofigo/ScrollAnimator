@@ -11,7 +11,27 @@ function setup(){
     bgColor.addKeyframe({r:255,g:0,b:0},3000);
     bgColor.addKeyframe({r:128,g:50,b:200},4000);
     
-    var pLeft = animator.addAnimation("left", "distance");
+    for(d of document.getElementsByClassName("textbox")){
+        var animator = scrollAnimator.newAnimator(d);
+        var t = animator.addAnimation("marginLeft", "distance", "pt");
+        t.setScreenRelation(1000);
+        t.setAnchor(d);
+        t.addKeyframe(0,0);
+        t.addKeyframe(100,500);
+        t.addKeyframe(0,1000);
+        var t = animator.addAnimation("backgroundColor", "color");
+        t.setScreenRelation(1000);
+        t.setAnchor(d);
+        t.addKeyframe({r:0,g:0,b:255},0);
+        t.addKeyframe({r:0,g:255,b:0},500);
+        t.addKeyframe({r:0,g:0,b:255},1000);
+        var t = animator.addAnimation("width", "distance", "pt");
+        t.setScreenRelation(1000);
+        t.setAnchor(d);
+        t.addKeyframe(400,0);
+        t.addKeyframe(600,400);
+        t.addKeyframe(400,1000);
+    }
     
     scrollAnimator.init();
 }
@@ -132,7 +152,7 @@ var scrollAnimator = (function(){
     Animation.prototype.update = function(dom, timeStamp){
         
         if (this.anchor){
-            timeStamp+= this.anchor.getBoundingClientRect().top;
+            timeStamp-= this.anchor.getBoundingClientRect().top;
         }
     
         if(this.screenRelation){
@@ -146,7 +166,8 @@ var scrollAnimator = (function(){
             var next_keyframe = false;
             for(k of this.keyframes){
                 if (k.timeStamp > timeStamp){
-                    next_keyframe = k;
+                    if(!last_keyframe)last_keyframe = k
+                    else next_keyframe = k;
                     break;
                 }
                 last_keyframe = k;
