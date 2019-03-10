@@ -94,9 +94,26 @@ var scrollAnimator = (function(){
         this.syntax = syntax;
         this.unit = unit;
         
+        this.screenRelation = false;
+        this.anchor = false;
+        
         this._keyframe;
         this._valueDiff;
         this._timeDiff;
+    }
+    Animation.prototype.setAnchor = function(dom){
+        this.anchor = dom;
+    }
+    Animation.prototype.setScreenRelation = function(valuePerScreenHeight){
+        if (valuePerScreenHeight === false){
+            this.screenRelation = false;
+        }
+        else if (valuePerScreenHeight === true){
+            this.screenRelation = 1000;
+        }
+        else{
+            this.screenRelation = valuePerScreenHeight;
+        }
     }
     Animation.prototype.clone = function(){
        var t = new Animation(this.cssAttribute);
@@ -113,6 +130,16 @@ var scrollAnimator = (function(){
         return keyframe;
     }
     Animation.prototype.update = function(dom, timeStamp){
+        
+        if (this.anchor){
+            timeStamp+= this.anchor.getBoundingClientRect().top;
+        }
+    
+        if(this.screenRelation){
+           var f = this.screenRelation/window.innerHeight;
+           timeStamp*= f;
+        }
+        
         
         if(!this._keyframe || this._keyframe.timeStamp>timeStamp || (this._keyframe.timeStamp+this._timeDiff)<timeStamp){
             var last_keyframe = false;
